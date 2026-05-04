@@ -1,0 +1,24 @@
+table1,table2,join_type,join_logic
+Procurement_Analysis_NRS.v_fact_purch_ord_line,Procurement_Analysis.v_dim_supl_hier,INNER,vfpol.ord_fr_supl_id = vdsh.supl_id
+Procurement_Analysis_NRS.v_fact_purch_ord_line,Procurement_Analysis_NRS.v_fact_purch_ord_hdr,INNER,vfpol.purch_doc_nbr = vfpoh.purch_doc_nbr
+Procurement_Analysis_NRS.v_fact_purch_ord_hdr,PROCUREMENT.v_purch_grp_nm,LEFT OUTER,vfpoh.purch_grp_cd = pgn.purch_grp_cd
+SUPPLIER.v_supl,SUPPLIER.v_dim_supl_hier,LEFT,vs.supl_id = vdsh.supl_id
+Supplier.v_supl_nm_addr_lfcyc,Supplier.v_elctr_addr_ENT,LEFT OUTER,vsnal.src_sys_nm = veaet.src_sys_nm AND vsnal.busns_org_prty_id = veaet.busns_org_prty_id AND veaet.elctr_addr_type_nm_cmv_id = 'Phone Voice'
+Supplier.v_supl_nm_addr_lfcyc,Supplier.v_supl_id_app_sys_map_ent,LEFT OUTER,vsnal.src_sys_nm = vsiasme.src_sys_nm AND vsnal.busns_org_prty_id = vsiasme.busns_org_prty_id AND vsiasme.app_sys_nm_cmv_id = 'SAP-CRS'
+SUPPLIER.v_supl_nm_addr_lfcyc,SUPPLIER.v_busns_bloc,INNER,vsnal.busns_org_prty_id = vbb.busns_org_prty_id
+SUPPLIER.v_busns_bloc,Procurement_Analysis.v_dim_co_shr,LEFT OUTER,vbb.co_cd = vdcs.co_cd
+SUPPLIER.v_busns_bloc,Procurement_Analysis.v_dim_purch_org,LEFT OUTER,vbb.purch_org_cd = vdpo.purch_org_cd
+Procurement_Analysis_NRS.v_fact_purch_ord_line,Procurement_Analysis.v_fact_purch_line_acct_asgn,LEFT,vfpol.purch_doc_nbr = vfplaa.purch_doc_nbr AND vfpol.purch_doc_line_nbr = vfplaa.purch_doc_line_nbr AND vfpol.src_sys_nm = vfplaa.src_sys_nm
+Procurement_Analysis_NRS.v_fact_purch_ord_line,Procurement_Analysis.v_dim_wbs_shr,LEFT,vfpol.frst_seq_wbs_intrnl_nbr = vdws.wbs_intrnl_nbr AND vfpol.src_sys_nm = vdws.src_sys_nm
+Procurement_Analysis_NRS.v_fact_purch_ord_line,Procurement_Analysis_NRS.v_shop_cart_hdr,LEFT,vfpol.shop_cart_nbr = vsch.shop_cart_nbr
+Procurement_Analysis_NRS.v_fact_purch_rqsit,Procurement_Analysis_NRS.v_fact_purch_ord_line,INNER,vfpr.purch_rqsit_line_nbr = vfpol.purch_rqsit_line_nbr AND vfpr.purch_rqsit_nbr = vfpol.purch_rqsit_nbr AND vfpol.purch_rqsit_nbr <> '*'
+Procurement_Analysis_NRS.v_fact_purch_rqsit,PROCUREMENT.v_purch_rqsit_acct_asgn,INNER,vfpr.purch_rqsit_line_nbr = vpraa.purch_rqsit_line_nbr AND vfpr.purch_rqsit_nbr = vpraa.purch_rqsit_nbr
+Procurement_Analysis.v_fact_supl_invc_hdr,Procurement_Analysis_NRS.v_fact_supl_invc_exp_line,INNER,vfsih.fin_doc_nbr = vfsiel.fin_doc_nbr AND vfsih.fscl_yr_nbr = vfsiel.fscl_yr_nbr AND vfsih.co_cd = vfsiel.co_cd AND vfsih.src_sys_nm = vfsiel.src_sys_nm
+Procurement_Analysis_NRS.v_fact_supl_invc_exp_line,Procurement_Analysis_NRS.v_fact_supl_invc_clr,LEFT,vfsiel.fscl_yr_nbr = vfsic.fin_doc_fscl_yr_nbr AND vfsiel.co_cd = vfsic.fin_doc_co_cd AND vfsiel.fin_doc_line_nbr = vfsic.fin_doc_exp_line_nbr AND vfsiel.fin_doc_nbr = vfsic.fin_doc_nbr AND vfsiel.src_sys_nm = vfsic.src_sys_nm
+Procurement_Analysis_NRS.v_fact_supl_invc_exp_line,Procurement_Analysis.v_fact_supl_invc_liabty_line,LEFT,vfsiel.fscl_yr_nbr = vfsill.fscl_yr_nbr AND vfsiel.co_cd = vfsill.co_cd AND vfsiel.fin_doc_nbr = vfsill.fin_doc_nbr AND vfsiel.src_sys_nm = vfsill.src_sys_nm
+Procurement_Analysis_NRS.v_fact_supl_invc_clr,Procurement_Analysis.v_fact_supl_invc_liabty_line,INNER,vfsill.fin_doc_nbr = vfsic.fin_doc_nbr AND vfsill.fin_doc_line_nbr = vfsic.fin_doc_liabty_line_nbr AND vfsill.fscl_yr_nbr = vfsic.fin_doc_fscl_yr_nbr AND vfsill.co_cd = vfsic.fin_doc_co_cd
+PROCUREMENT.v_shop_cart_aprvr,PROCUREMENT.v_shop_cart_itm,INNER,vsca.shop_cart_nbr = vsci.shop_cart_nbr
+PROCUREMENT.v_shop_cart_itm,PROCUREMENT.v_shop_cart_hdr,INNER,vsci.shop_cart_nbr = vsch.shop_cart_nbr
+PROCUREMENT.v_shop_cart_itm,Procurement_Analysis_NRS.v_fact_purch_ord_line,INNER,vsci.shop_cart_nbr = vfpol.shop_cart_nbr
+PROCUREMENT.v_purch_rqsit_CRS,PROCUREMENT.v_purch_grp_nm,INNER,vprc.purch_grp_cd = vpgn.purch_grp_cd
+PROCUREMENT.v_purch_rqsit_CRS,PROCUREMENT.v_purch_rqsit_acct_asgn,INNER,vprc.purch_rqsit_line_nbr = vpraa.purch_rqsit_line_nbr AND vprc.purch_rqsit_nbr = vpraa.purch_rqsit_nbr

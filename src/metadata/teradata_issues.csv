@@ -1,0 +1,102 @@
+ISSUE,TERADATA_SYNTAX
+DATEADD,+ INTERVAL
+GETDATE(),CURRENT_DATE
+ISNULL,COALESCE
+NVL2,CASE
+LEN,CHAR_LENGTH
+SUBSTRING(col,start,len),SUBSTR(col FROM start FOR len)
+TOP n,QUALIFY ROW_NUMBER()
+LIMIT,QUALIFY
+DATEDIFF,date subtraction
+NOW(),CURRENT_TIMESTAMP
+SYSDATE,CURRENT_DATE
+CAST AS VARCHAR,CAST AS VARCHAR(n)
+TRUNC(date),CAST(date AS DATE)
+STRING_AGG,XMLAGG
+IIF,CASE
+INTERVAL 7 DAY,INTERVAL '7' DAY
+CURRENT_DATE(),CURRENT_DATE
+WEEK interval,DAY interval logic
+timestamp subtraction,CAST to DATE then subtract
+string_date_compare,CAST(string AS DATE)
+TO_DATE wrong format,correct format mask
+EXTRACT wrong type,CAST then EXTRACT
+DATE = VARCHAR,CAST VARCHAR TO DATE
+timezone functions,manual conversion
+implicit join,explicit JOIN ... ON
+ambiguous column,alias.column
+alias before declaration,define alias first
+mixed joins,use explicit JOIN only
+bad join order,reorder joins
+datatype mismatch join,CAST both sides
+= for pattern,LIKE
+self join no alias,add aliases
+duplicate columns,alias columns
+LEFT JOIN filter issue,move filter to ON
+missing ON clause,add join condition
+non-index join,use indexed columns
+missing GROUP BY column,add to GROUP BY
+alias in GROUP BY,use actual column
+mixed aggregate columns,fix aggregation
+HAVING misuse,use GROUP BY first
+COUNT(col) confusion,COUNT(*)
+SUM on VARCHAR,CAST to numeric
+nested aggregation error,separate query
+DISTINCT misuse,review DISTINCT
+window+group error,separate logic
+double aggregation,fix grouping
+WHERE on window function,use QUALIFY
+window no ORDER BY,add ORDER BY
+ROW_NUMBER no PARTITION,add PARTITION
+window in WHERE,use QUALIFY
+wrong PARTITION BY,fix columns
+group+window mix,separate layers
+alias in QUALIFY,use full expression
+non-deterministic rank,add ORDER BY
+too many windows,optimize windows
+scalar subquery multi-row,limit to 1 row
+correlated subquery heavy,use JOIN
+missing subquery alias,add alias
+ORDER BY in subquery,remove or QUALIFY
+EXISTS vs IN,use EXISTS for performance
+NOT IN with NULL,use NOT EXISTS
+deep subqueries,flatten query
+aggregate in subquery misuse,refactor
+VARCHAR vs CHAR,CAST appropriately
+INT vs DECIMAL,CAST types
+implicit cast fail,explicit CAST
+numeric overflow,adjust datatype
+division by zero,NULLIF(divisor,0)
+invalid CAST,fix datatype
+number vs string,CAST
+string truncation,increase length
+FLOAT join,use DECIMAL
+precision loss,use DECIMAL
+= NULL,IS NULL
+<> NULL,IS NOT NULL
+NOT IN NULL issue,NOT EXISTS
+COALESCE misuse,correct order
+NULL math issue,COALESCE values
+COUNT NULL issue,COUNT(*)
+no primary index,define PI
+wrong datatype DDL,fix schema
+duplicate table,IF NOT EXISTS logic
+reserved keyword column,rename/quote
+bad volatile syntax,correct syntax
+missing PRESERVE ROWS,add ON COMMIT PRESERVE ROWS
+table not found,check database
+permission denied,grant access
+bad partition,fix partitioning
+spool exceeded,optimize query
+skewed join,redistribute keys
+no stats,collect statistics
+product join,add join condition
+large intermediate,filter early
+missing WHERE,add filters
+SELECT *,select needed columns
+bad join order,reorder joins
+no partition elimination,add partition filter
+repeated subquery,use temp table
+unnecessary DISTINCT,remove DISTINCT
+BETWEEN date_excludes_time_end,use >= start_date AND < end_date + INTERVAL '1' DAY
+BETWEEN timestamp_issue,use explicit CAST or end_of_day logic

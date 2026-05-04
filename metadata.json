@@ -1,0 +1,5 @@
+{
+  "name": "Procurement SQL Agent",
+  "description": "An agentic chatbot that generates Teradata SQL queries for procurement data based on user questions, maintaining context and asking for clarifications when needed.",
+  "requestFramePermissions": []
+}

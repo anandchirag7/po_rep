@@ -1,0 +1,48 @@
+# Enterprise Procurement Business Rules
+
+## 1. Domain Tables Mapping
+These are the primary tables used for each functional area:
+
+- **Purchase Orders (PO)**: 
+  - Header: Procurement_Analysis_NRS.v_fact_purch_ord_hdr (alias: vfpoh)
+  - Line Items: Procurement_Analysis_NRS.v_fact_purch_ord_line (alias: vfpol)
+  - Account Assignment: Procurement_Analysis.v_fact_purch_line_acct_asgn (alias: vfplaa)
+- **Requisitions**: 
+  - Requisition Base: Procurement_Analysis_NRS.v_fact_purch_rqsit (alias: vfpr)
+  - SAP Requisition (CRS): PROCUREMENT.v_purch_rqsit_CRS (alias: vprc)
+  - Account Assignment: PROCUREMENT.v_purch_rqsit_acct_asgn (alias: vpraa)
+- **Invoices**: 
+  - Header: Procurement_Analysis.v_fact_supl_invc_hdr (alias: vfsih)
+  - Line Items: Procurement_Analysis_NRS.v_fact_supl_invc_exp_line (alias: vfsiel)
+  - Liability: Procurement_Analysis.v_fact_supl_invc_liabty_line (alias: vfsill)
+- **Payments**: 
+  - Clearing: Procurement_Analysis_NRS.v_fact_supl_invc_clr (alias: vfsic)
+- **Suppliers**: 
+  - Hierarchy: Procurement_Analysis.v_dim_supl_hier (alias: vdsh)
+  - General: SUPPLIER.v_supl (alias: vs), Supplier.v_supl_nm_addr_lfcyc (alias: vsnal)
+  - Blocks: SUPPLIER.v_busns_bloc (alias: vbb)
+- **Shopping Carts**: 
+  - Header: PROCUREMENT.v_shop_cart_hdr (alias: vsch)
+  - Item: PROCUREMENT.v_shop_cart_itm (alias: vsci)
+  - Approver: PROCUREMENT.v_shop_cart_aprvr (alias: vsca)
+
+## 2. Default Parameters & Behaviors
+- **Cost Center**: If the user does not specify a cost center, use `99999999` as a default value which triggers queries to drop the cost center filter.
+- **Supplier ID**: If no supplier ID is provided, use `99999999` to drop the supplier filter.
+- **PO Number**: If no PO Number is provided, use `'NULL'`.
+
+## 3. Query Logic & Filtering Definitions
+- **Late POs**: A PO is late if:
+  `(vfpol.purch_line_rcv_sts_cd = 'Complete' AND vfpol.gds_rcpt_dlvr_dt_late_ind = 'Y') OR (vfpol.purch_line_rcv_sts_cd <> 'Complete' AND dlvr_dt < current_timestamp(0))`
+- **Open POs**: A PO is considered Open (unpaid/partially paid) if the outstanding amount is greater than 1:
+  `(vfpol.purch_line_net_trns_amt - vfpol.purch_line_paid_trns_amt - vfpol.purch_line_act_dscnt_trns_amt + vfpol.purch_line_cr_trns_amt) > 1`
+- **Unreleased Requisitions**: A requisition is unreleased if it has not been converted to a PO:
+  `vprc.po_nbr = ''`
+- **Shopping Cart Status**: 
+  - For `SBI-NBP` system: 'I1129' = Approved, 'I1015' = Awaiting Approval, 'I1016' = Rejected.
+  - For other systems: '3' = Approved, '1' = Waiting, '2' = Rejected.
+
+## 4. Specific Identifiers for Filtering
+- When filtering by Requestor/Creator on a PO: Use `purch_doc_rgstr_uid` (vfpol) or `purch_doc_cre_uid` (vfpoh).
+- When filtering by Supplier ID: Use `ord_fr_supl_id` (vfpol) or `busns_org_prty_id` (vsnal).
+- When filtering by Cost Center: Use `frst_seq_cost_centr_char_nbr` (vfpol) or `cost_centr_cd` (vpraa, vfsiel).
