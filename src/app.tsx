@@ -10,6 +10,7 @@ import metadataJoins from './metadata/metadata_joins.csv?raw';
 import calculatedColumns from './metadata/calculated_columns.csv?raw';
 import teradataIssues from './metadata/teradata_issues.csv?raw';
 import { validateTeradataSQL } from './utils/teradataValidator';
+import { generateSummary } from './utils/summaryAgent';
 
 const BASE_SYSTEM_INSTRUCTION = `You are an expert Procurement Data Analyst and Teradata SQL Developer agent.
 Your task is to translate user questions into Teradata SQL queries based on a specific repository of core procurement queries.
@@ -37,11 +38,9 @@ const TEMPLATE_CONTEXT = sqlTemplates.templates
   .map((t: any) => {
     return `### Template: ${t.template_id} (${t.intent})\nDescription: ${t.description}\nSQL:\n${t.sql}\n`;
   })
-  .join('\n---\n');
+  .join('\n');
 
 const SYSTEM_INSTRUCTION = `${BASE_SYSTEM_INSTRUCTION}\n\n### REFERENCE SQL TEMPLATES (GROUND TRUTH)\n${TEMPLATE_CONTEXT}`;
-
-
 
 const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
   const [copied, setCopied] = useState(false);
@@ -240,9 +239,32 @@ The following parameters are constant for this user session. Do NOT ask the user
         }
       }
 
+      let finalContent = content;
+
+      // Pipeline Step 2: Execution & Summary (if SQL was generated)
+      const finalSqlMatch = content.match(/```sql\n([\s\S]*?)```/i);
+      if (finalSqlMatch) {
+        const sql = finalSqlMatch[1];
+        
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === modelMessageId ? { ...msg, text: 'Executing query and analyzing results...' } : msg
+          )
+        );
+
+        // 1. Generate Summary (includes mock execution)
+        const insights = await generateSummary(sql, userMessage.text);
+
+        if (insights) {
+          // 2. Format output: Insights -> SQL -> Explanation
+          const explanation = content.replace(/```sql\n[\s\S]*?```/i, '').trim();
+          finalContent = `### Business Insights\n${insights}\n\n### Query\n\`\`\`sql\n${sql}\n\`\`\`\n\n${explanation}`;
+        }
+      }
+
       setMessages((prev) =>
         prev.map((msg) =>
-          msg.id === modelMessageId ? { ...msg, text: content } : msg
+          msg.id === modelMessageId ? { ...msg, text: finalContent } : msg
         )
       );
     } catch (error) {
