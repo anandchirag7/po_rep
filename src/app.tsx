@@ -26,16 +26,9 @@ ${metadataJoins}
 ### CALCULATED COLUMNS LOGIC
 ${calculatedColumns}
 
-### CURRENT CONTEXT (DEFAULT PARAMETERS)
-The following parameters are constant for this user session. Do NOT ask the user for these values. Use them automatically to replace placeholders in the SQL query:
-- @CostCenterNumber = 58588
-- @UID = chiragan
-- @UNAME = chiragan
-- @SourceSystem = SBI-NBP
-
 ### RULES
 1. **Context Awareness:** Maintain conversation context. If a user asks a follow-up, modify the previous query.
-2. **Missing Parameters:** Before generating ANY SQL, verify if you have all required parameters. You already have Cost Center, UID, and Source System from the Current Context above. If any OTHER parameters (e.g. Date Range, Material ID, PO Number) are missing for the specific template, DO NOT write a SQL query yet. Instead, politely ask the user to provide the missing information.
+2. **Missing Parameters:** Before generating ANY SQL, verify if you have all required parameters. You already have Cost Center, UID, and Source System from the Current Context provided. If any OTHER parameters (e.g. Date Range, Material ID, PO Number) are missing for the specific template, DO NOT write a SQL query yet. Instead, politely ask the user to provide the missing information.
 3. **Wait for Clarification:** Only generate the SQL when you have received all the required parameters from the user to substitute into the query.
 4. **SQL Generation:** Use standard Teradata syntax. Wrap in \`\`\`sql ... \`\`\` blocks. Replace placeholders (like \`@CostCenterNumber\`, \`@FromDate\`, \`@ToDate\`) with the ACTUAL values provided by the user or the Current Context. Do NOT output raw placeholders in your final SQL.
 5. **Ground Truth:** ALWAYS prioritize the join logic and column aliases found in the REFERENCE SQL TEMPLATES provided below.`;
@@ -100,6 +93,24 @@ export default function App() {
     text: 'Hello! I am your Procurement SQL Agent. I have been updated with your specific query repository for Cost Centers, Purchase Orders, Suppliers, and Invoices. How can I assist you with your procurement data today?',
   });
 
+  const [currentUser, setCurrentUser] = useState({
+    userId: 'Loading...',
+    costCenter: 'Loading...',
+    sourceSystem: 'SBI-NBP'
+  });
+
+  // Mock a backend fetch for the current user
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setCurrentUser({
+        userId: 'chiragan',
+        costCenter: '58588',
+        sourceSystem: 'SBI-NBP'
+      });
+    }, 1000); // Simulate 1 second network delay
+    return () => clearTimeout(timer);
+  }, []);
+
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -134,8 +145,18 @@ export default function App() {
     setIsLoading(true);
 
     try {
+      const dynamicSystemPrompt = `${SYSTEM_INSTRUCTION}
+
+### CURRENT CONTEXT (DEFAULT PARAMETERS)
+The following parameters are constant for this user session. Do NOT ask the user for these values. Use them automatically to replace placeholders in the SQL query:
+- @CostCenterNumber = ${currentUser.costCenter}
+- @UID = ${currentUser.userId}
+- @UNAME = ${currentUser.userId}
+- @SourceSystem = ${currentUser.sourceSystem}
+`;
+
       const apiMessages = [
-        { role: 'system', content: SYSTEM_INSTRUCTION },
+        { role: 'system', content: dynamicSystemPrompt },
         ...messages.slice(1).map(m => ({ // Skip the first welcome message
           role: m.role === 'model' ? 'assistant' : 'user',
           content: m.text
@@ -278,15 +299,15 @@ export default function App() {
           <div className="space-y-3 mb-8">
             <div>
               <label className="text-[10px] uppercase text-slate-500 font-bold tracking-wider block mb-1">Cost Center</label>
-              <input type="text" disabled value="58588" className="w-full bg-slate-800/50 text-slate-400 border border-slate-700/50 rounded-md p-2 text-xs cursor-not-allowed" />
+              <input type="text" disabled value={currentUser.costCenter} className="w-full bg-slate-800/50 text-slate-400 border border-slate-700/50 rounded-md p-2 text-xs cursor-not-allowed" />
             </div>
             <div>
               <label className="text-[10px] uppercase text-slate-500 font-bold tracking-wider block mb-1">User ID</label>
-              <input type="text" disabled value="chiragan" className="w-full bg-slate-800/50 text-slate-400 border border-slate-700/50 rounded-md p-2 text-xs cursor-not-allowed" />
+              <input type="text" disabled value={currentUser.userId} className="w-full bg-slate-800/50 text-slate-400 border border-slate-700/50 rounded-md p-2 text-xs cursor-not-allowed" />
             </div>
             <div>
               <label className="text-[10px] uppercase text-slate-500 font-bold tracking-wider block mb-1">Source System</label>
-              <input type="text" disabled value="SBI-NBP" className="w-full bg-slate-800/50 text-slate-400 border border-slate-700/50 rounded-md p-2 text-xs cursor-not-allowed" />
+              <input type="text" disabled value={currentUser.sourceSystem} className="w-full bg-slate-800/50 text-slate-400 border border-slate-700/50 rounded-md p-2 text-xs cursor-not-allowed" />
             </div>
           </div>
 
