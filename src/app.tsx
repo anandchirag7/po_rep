@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Send, Bot, User, Database, Loader2, Check, Copy, Sparkles, MessageSquare, TerminalSquare, Trash2 } from 'lucide-react';
+import { Send, Bot, User, Database, Loader2, Check, Copy, Sparkles, MessageSquare, TerminalSquare, Trash2, ThumbsUp, ThumbsDown } from 'lucide-react';
 import remarkGfm from 'remark-gfm';
 import { useChatHistory, Message } from './hooks/useChatHistory';
 import sqlTemplates from './metadata/Sql_template_registry.json';
@@ -86,17 +86,21 @@ const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
 };
 
 export default function App() {
-  const { messages, setMessages, history, currentChatId, startNewChat, loadChat, deleteChat } = useChatHistory({
-    id: '1',
-    role: 'model',
-    text: 'Hello! I am your Procurement SQL Agent. I have been updated with your specific query repository for Cost Centers, Purchase Orders, Suppliers, and Invoices. How can I assist you with your procurement data today?',
-  });
-
   const [currentUser, setCurrentUser] = useState({
     userId: 'Loading...',
     costCenter: 'Loading...',
     sourceSystem: 'SBI-NBP'
   });
+
+  const { messages, setMessages, history, currentChatId, startNewChat, loadChat, deleteChat } = useChatHistory(
+    {
+      id: '1',
+      role: 'model',
+      text: 'Hello! I am your Procurement SQL Agent. I have been updated with your specific query repository for Cost Centers, Purchase Orders, Suppliers, and Invoices. How can I assist you with your procurement data today?',
+    },
+    currentUser.userId,
+    currentUser.costCenter
+  );
 
   // Mock a backend fetch for the current user
   useEffect(() => {
@@ -143,6 +147,19 @@ export default function App() {
     setInput('');
     setIsLoading(true);
 
+    // Log the user's action
+    fetch('http://localhost:3001/api/logs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: currentUser.userId,
+        action: 'SUBMIT_QUERY',
+        details: { query: userMessage.text }
+      })
+    }).catch(console.error);
+
+    const modelMessageId = Date.now().toString() + '-model';
+
     try {
       const dynamicSystemPrompt = `${SYSTEM_INSTRUCTION}
 
@@ -172,7 +189,6 @@ The following parameters are constant for this user session. Do NOT ask the user
         }
       };
 
-      const modelMessageId = (Date.now() + 1).toString();
       // Add a placeholder message while waiting
       setMessages((prev) => [
         ...prev,
@@ -272,14 +288,23 @@ The following parameters are constant for this user session. Do NOT ask the user
       setMessages((prev) => [
         ...prev,
         {
-          id: (Date.now() + 1).toString(),
+          id: Date.now().toString() + '-error',
           role: 'model',
-          text: 'I apologize, but I am unable to process your request at the moment due to an internal error.',
+          text: 'Sorry, I encountered an error. Please make sure Ollama is running (`ollama serve`).',
         },
       ]);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleFeedback = (messageId: string, isPositive: boolean) => {
+    fetch('http://localhost:3001/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message_id: messageId, is_positive: isPositive })
+    }).catch(console.error);
+    // Optimistic UI feedback could be added here
   };
 
   const SUGGESTIONS = [
@@ -440,6 +465,24 @@ The following parameters are constant for this user session. Do NOT ask the user
                     </div>
                   )}
                 </div>
+                {msg.role === 'model' && msg.id !== '1' && !isLoading && (
+                  <div className="flex items-center gap-2 mt-2 ml-2 text-slate-400">
+                    <button 
+                      onClick={() => handleFeedback(msg.id, true)}
+                      className="p-1 hover:text-emerald-500 hover:bg-emerald-50 rounded transition-colors"
+                      title="Helpful"
+                    >
+                      <ThumbsUp size={14} />
+                    </button>
+                    <button 
+                      onClick={() => handleFeedback(msg.id, false)}
+                      className="p-1 hover:text-rose-500 hover:bg-rose-50 rounded transition-colors"
+                      title="Not helpful"
+                    >
+                      <ThumbsDown size={14} />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ))}
